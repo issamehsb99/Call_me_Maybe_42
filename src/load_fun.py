@@ -31,6 +31,14 @@ def functions() -> list:
     return funcs
 
 
+
+func_lis = []
+
 cla = functions()
 for c in cla:
+    func_lis.append(c.name)
     print(c.name)
+    print(c.parameters.get("a"))
+    if c.parameters.get("a") is not None:
+        print("-====", c.parameters.get("a").get("type"))
+
