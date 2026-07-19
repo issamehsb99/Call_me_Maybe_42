@@ -2,10 +2,6 @@ import json
 from pydantic import BaseModel, ValidationError
 
 
-class TypeInfo(BaseModel):
-    type: str
-
-
 class FunctionCalling(BaseModel):
     name: str
     description: str
@@ -13,33 +9,21 @@ class FunctionCalling(BaseModel):
     returns: dict[str, str]
 
 def functions() -> list:
-    path = "../data/input/functions_definition.json"
+    path = "data/input/functions_definition.json"
 
     with open(path, "r") as f:
         data = json.load(f)
-
+   
     funcs = []
-
-    for dt in data:
+    fun_par={}
+    for dt in data: 
+        
         try:
             fn = FunctionCalling.model_validate(dt)
             funcs.append(fn)
         except ValidationError as e:
             print("Validation error:")
             print(e)
-
     return funcs
 
-
-
-# func_lis = []
-
-# cla = functions()
-# for c in cla:
-#     func_lis.append(c.name)
-#     # print(c.name)
-#     l = list(c.parameters.keys())
-#     print(l)
-#     # if c.parameters.get("a") is not None:
-#     #     print("-====", c.parameters.get("a").get("type"))
 

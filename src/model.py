@@ -1,97 +1,146 @@
 from .llm_sdk import Small_LLM_Model
-import numpy as np
+import numpy as np 
+from .constrained import constrained_function_name , get_brakcets ,get_word
+from .utils import  get_user_prompt , get_my_prompt , get_fun_id, encode_fun
 import json
-from constrained import get_brakcets, get_parametre, get_word ,constrained_function_name
-# from load_fun import functions
-from utils import get_user_prompt, get_fun_id ,get_my_prompt
-from pydantic import BaseModel, ValidationError
+import datetime, time
 
+
+
+
+# model = Small_LLM_Model()
+
+def get_name_pa(self,para: dict) -> list[int]:
+    li = []
+    for i in para.keys():
+        l = self.model.encode(f'"{i}":').tolist()[0]
+        # print(model.decode(l)[0]
+        li.append(l)
+
+    return li
+def get_type(para):
+    li_type = []
+    for i in para.values():
+        li_type.append(i["type"])
+    return(li_type)
+
+def get_fun_parametre(fun_name:str):
+    path = "data/input/functions_definition.json"
+    with open(path, "r") as f:
+        data = json.load(f)
+    fun_para = {}
+    for i in data:
+        fun_para[i["name"]] = i["parameters"]
+    para = fun_para[fun_name]
+    return para
+
+def get_full_number(self, tokens, resulta):
+    targets = "-0123456789."
+    stoped = ['"', ","]
+    tar_stop = [self.model.encode(c) for c in stoped]
+    targets_ids = []
+    for i in targets:
+        targets_ids += self.model.encode(i).tolist()[0]
+    targets_ids += tar_stop
+    while (True):
+        logits = self.model.get_logits_from_input_ids(tokens)
+        filtred = np.full_like(logits, -np.inf)
+        for i in targets_ids:
+            filtred[i] = logits[i]
+        next_token = int(np.argmax(filtred))
+        if next_token == self.model.encode("\"").tolist()[0][0]:
+            break
+        if next_token != self.model.encode(","):
+            tokens.append(next_token)
+            resulta.append(next_token)
+        if next_token in tar_stop:
+            break
+
+def get_full_str(self, tokens, resulta):
+    while True:
+        logits = self.model.get_logits_from_input_ids(tokens)
+        next_token = int(np.argmax(logits))
+        token = self.model.decode(next_token)
+        if '"' in token :
+            splited = token.split('"')[0]
+            if not splited:
+                break
+            ids = self.model.encode(splited).tolist()[0]
+            tokens.extend(ids)
+            resulta.extend(ids)
+            break
+        resulta.append(next_token)
+        tokens.append(next_token)
+     
+def get_name_and_type(self ,resulta,tokens, num_para, para):
+    i = 0
+    for k, v in para.items():
+        if i < num_para and i > 0:
+            resulta += self.model.encode(",").tolist()[0]
+            tokens += self.model.encode(",").tolist()[0] 
+        tokens += get_name_pa(self,para)[i]
+        resulta += get_name_pa(self,para)[i]
+        if v["type"] == "number":
+            get_full_number(self, tokens, resulta)
+        if v["type"] == "string":
+            id = self.model.encode('"').tolist()[0][0]
+            tokens.append(id)
+            resulta.append(id)
+            get_full_str(self, tokens, resulta)
+            tokens.append(id)
+            resulta.append(id)
+        i += 1
 
 class Model:
     model: Small_LLM_Model = Small_LLM_Model()
     fn_de:list[dict]
-    my_prompt_id = get_my_prompt(model)
-    fun_name_li :list = get_fun_id()
     li_prompts : list = get_user_prompt()
     user_prompt: str = "" 
     fn_name:str = ""
-    def process(self,tokens):
-        tokens = get_brakcets(self ,"start", tokens)
-        tokens = get_word(self, f"\"prompt\"\"{self.user_prompt}\",", tokens)
+    start = 1;
+    def process(self,tokens, prompt):
+        fun_name_li :list = get_fun_id(self)
+        resulta = []
+        if self.start:
+            resulta = get_brakcets(self, "start", resulta)
+            tokens = get_brakcets(self ,"start", tokens)
+        else:
+            resulta = get_brakcets(self, "mid", resulta)
+            tokens = get_brakcets(self ,"mid", tokens)
+        resulta = get_word(self, f"\"prompt\":\"{self.user_prompt}\",", resulta) 
+        tokens = get_word(self, f"\"prompt\":\"{self.user_prompt}\",", tokens)
         tokens = get_word(self, "\"name\":", tokens)
-        return tokens
+        resulta = get_word(self, "\"name\":", resulta)
+        tokens += self.model.encode("\"").tolist()[0]
+        resulta += self.model.encode("\"").tolist()[0]
+        fn_name_ids = constrained_function_name(self,fun_name_li, tokens)
+        self.fn_name = self.model.decode(fn_name_ids)
+        resulta += fn_name_ids
+        resulta += self.model.encode("\"")[0].tolist()
+        tokens += self.model.encode("\"")[0].tolist()
+        tokens = get_word(self, ",\"parameters\":{", tokens)
+        resulta = get_word(self, ",\"parameters\":{", resulta)
+        para = get_fun_parametre(self.fn_name)
+        num_para = len(para.keys())
+        get_name_and_type(self, resulta ,tokens, num_para, para)
+        # print("\n\n\n =====", self.model.decode(tokens))
+        return tokens, resulta
+    
     def main(self):
         result: list[int] = []
+        result = get_my_prompt(self)
+        r_final = []
         for prompt in self.li_prompts:
-            result = []
             self.user_prompt = prompt
-            output = self.process(result)
-            prompt_id = self.model.encode(prompt).tolist()[0]
-            ids = self.my_prompt_id + prompt_id
-            output += constrained_function_name(self.fun_name_li, ids)
-            print(self.model.decode(output))
-
-# def main:
-#     model = Model(model=Small_LLM_Model(),
-#                   fn_def=data
-#                   )
-
-
-
-
-
-
-
-
-
-
-
-
-# i = 1
-# function_ids = [[8522, 265, 322], [8522, 4555, 456], [8522, 5566, 4111], [85111, 455 , 65655]]
-# { 4111}
-# gen_ids = [8522, 5566]
-# [for ids in functions_ids if gen_ids == ids[:i]]
-# i = 2
-# [[: i]]
-
-
-for prompt in li_prompt:
-    id_prompt = model.encode(prompt)
-    id_p = id_prompt[0].tolist()
-    input_id = prompt_id + id_p
-
-
-    generated_ids = []
-    open_braces = 0
-    started = False
-    l = 0
-    for _ in range(20):  # safety cap, higher than before
-
-        l += 1
-        print(l)
-        constrained_function_name(fun_name_id , input_id)
-        # constrained decoding 0123456789
-    #     next_token_id = int(np.argmax(logits))
-    #     input_id.append(next_token_id)
-    #     generated_ids.append(next_token_id)
-        
-
-    #     token_str = model.decode([next_token_id])
-    
-    #     print(token_str, end="")
-    #     #check end of generation
-    #     # track brace balance to detect a complete JSON object
-    #     for ch in token_str:
-    #         if ch == "{":
-    #             open_braces += 1
-    #             started = True
-    #         elif ch == "}":
-    #             open_braces -= 1
-
-    #     if started and open_braces == 0:
-    #         break  # JSON object is structurally closed, stop generating
-
-    # print("\n\n")
-
-
+            result ,j = self.process(result, prompt)
+            # print(self.model.decode(j))
+            r_final += j# result = output
+            self.start = 0
+        r_final = get_brakcets(self ,"end", r_final)
+        print(self.model.decode(r_final))
+mod = Model()
+begin_time= time.perf_counter()
+mod.main()
+end_time = time.perf_counter()
+print("\ntime ==========" , datetime.timedelta( end_time - begin_time ))
+print((end_time - begin_time)/60)
