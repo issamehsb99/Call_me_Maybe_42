@@ -1,4 +1,4 @@
-from .llm_sdk import Small_LLM_Model
+# from .llm_sdk import Small_LLM_Model
 import json
 # model = Small_LLM_Model()
 from .load_fun import functions
@@ -56,6 +56,11 @@ def get_user_prompt() ->list[str]:
     with open("data/input/function_calling_tests.json", 'r') as f:
         data = json.load(f)
     li_prompt = []
+    li_final = []
     for i in data:
         li_prompt.append(i.get("prompt"))
-    return li_prompt
+    for pr in li_prompt:
+        if "\"" in pr:
+            pr = pr.replace("\"", "\'")
+        li_final.append(pr)
+    return li_final

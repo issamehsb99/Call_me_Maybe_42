@@ -137,10 +137,13 @@ class Model:
             r_final += j# result = output
             self.start = 0
         r_final = get_brakcets(self ,"end", r_final)
-        print(self.model.decode(r_final))
+        return self.model.decode(r_final)
 mod = Model()
 begin_time= time.perf_counter()
-mod.main()
+resulta = mod.main()
+# with open("oj.json", 'w+')as f:
+#     json.dump(json.loads(resulta), f, indent=4)
+print(resulta)
 end_time = time.perf_counter()
 print("\ntime ==========" , datetime.timedelta( end_time - begin_time ))
 print((end_time - begin_time)/60)
