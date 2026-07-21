@@ -141,9 +141,8 @@ class Model:
 mod = Model()
 begin_time= time.perf_counter()
 resulta = mod.main()
-# with open("oj.json", 'w+')as f:
-#     json.dump(json.loads(resulta), f, indent=4)
-print(resulta)
+with open("oj.json", 'w+')as f:
+    json.dump(json.loads(resulta), f, indent=4)
 end_time = time.perf_counter()
 print("\ntime ==========" , datetime.timedelta( end_time - begin_time ))
 print((end_time - begin_time)/60)
