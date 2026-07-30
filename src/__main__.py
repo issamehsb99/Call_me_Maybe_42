@@ -6,7 +6,7 @@ import time
 from .model import parse_args
 
 
-def main():
+def main() -> None:
     mod = Model()
     begin_time = time.perf_counter()
     resulta = mod.main()
@@ -20,7 +20,7 @@ def main():
     except IOError as e:
         print(e)
     end_time = time.perf_counter()
-    print("\ntime ==========", datetime.timedelta(end_time - begin_time))
+    # print("\ntime ==========", datetime.timedelta(end_time - begin_time))
     print((end_time - begin_time)/60)
 
 
@@ -29,3 +29,5 @@ if __name__ == "__main__":
         main()
     except json.decoder.JSONDecodeError:
         print("error")
+    except Exception as e :
+        print(e)

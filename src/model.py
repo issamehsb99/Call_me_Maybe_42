@@ -51,23 +51,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_name_pa(self, para: dict) -> list[int]:
+def get_name_pa(self: Any, para: dict) -> list[Any]:
     li = []
     for i in para.keys():
         k = self.model.encode(f'"{i}":').tolist()[0]
         li.append(k)
-
     return li
 
 
-def get_type(para):
+def get_type(para: dict[Any, Any]) -> list[str]:
     li_type = []
     for i in para.values():
         li_type.append(i["type"])
     return (li_type)
 
 
-def get_fun_parametre(fun_name: str):
+def get_fun_parametre(fun_name: str) -> Any:
     args = parse_args()
     path = args.functions_definition
     try:
@@ -82,16 +81,20 @@ def get_fun_parametre(fun_name: str):
     return para
 
 
-def get_full_number(self, tokens, resulta, ma):
+def get_full_number(
+        self: Any,
+        tokens: list[Any],
+        resulta: list[Any],
+        ma: int) -> None:
     stoped = ['"', ","]
     targets = "-0123456789."
-    num = []
+    num: list[int] = []
     tar_stop = [self.model.encode(c) for c in stoped]
     targets_ids = []
     for j in targets:
         targets_ids += self.model.encode(j).tolist()[0]
     targets_ids += tar_stop
-    j = 0
+    var = 0
     while (True):
         logits = self.model.get_logits_from_input_ids(tokens)
         filtred = np.full_like(logits, -np.inf)
@@ -111,14 +114,19 @@ def get_full_number(self, tokens, resulta, ma):
             nm = float(d)
             resulta.extend(self.model.encode(str(nm)).tolist()[0])
             break
-        if j == ma:
+        if var == ma:
             d = self.model.decode(num)
             nm = float(d)
             resulta.extend(self.model.encode(str(nm)).tolist()[0])
-        j += 1
+        var += 1
 
 
-def get_full_int(self, tokens, resulta, ma):
+def get_full_int(
+        self: Any,
+        tokens: list[Any],
+        resulta: list[Any],
+        ma: int
+) -> None:
     targets = "-0123456789"
     stoped = ['"', ","]
     tar_stop = [self.model.encode(c) for c in stoped]
@@ -145,7 +153,11 @@ def get_full_int(self, tokens, resulta, ma):
         jl += 1
 
 
-def get_full_str(self, tokens, resulta):
+def get_full_str(
+        self: Any,
+        tokens: list[Any],
+        resulta: list[Any]
+) -> None:
     while True:
         logits = self.model.get_logits_from_input_ids(tokens)
         next_token = int(np.argmax(logits))
@@ -164,7 +176,7 @@ def get_full_str(self, tokens, resulta):
         tokens.append(next_token)
 
 
-def get_bool(self, tokens, resulta):
+def get_bool(self: Any, tokens: list[Any], resulta: list[Any]) -> None:
     allowed = ["true", "false"]
     id_al = [self.model.encode(i) for i in allowed]
     logits = self.model.get_logits_from_input_ids(tokens)
@@ -178,14 +190,25 @@ def get_bool(self, tokens, resulta):
             resulta.extend(p)
 
 
-def get_name_and_type(self, resulta, tokens, num_para, para, ma):
+def get_name_and_type(
+        self: Any,
+        resulta: list[Any],
+        tokens: list[Any],
+        num_para: int,
+        para: dict,
+        ma: int
+) -> None:
     i = 0
     for v in para.values():
         if i < num_para and i > 0:
             resulta += self.model.encode(",").tolist()[0]
             tokens += self.model.encode(",").tolist()[0]
-        tokens += get_name_pa(self, para)[i]
-        resulta += get_name_pa(self, para)[i]
+        for tkn in get_name_pa(self, para)[i]:
+            tokens.append(tkn)
+            resulta.append(tkn)
+        # tokens.extend(get_name_pa(self, para)[i])
+        # print(get_name_pa(self, para)[i])
+        # resulta += get_name_pa(self, para)[i]
         if v["type"] == "number" or v["type"] == "float":
             get_full_number(self, tokens, resulta, ma)
         if v["type"] == "string":
@@ -209,13 +232,13 @@ def get_name_and_type(self, resulta, tokens, num_para, para, ma):
 class Model(BaseModel):
     model: Any = Field(default_factory=Small_LLM_Model)
     li_prompts: list = Field(default_factory=get_user_prompt)
-    user_prompt: str = ""
+    user_prt: str = ""
     fn_name: str = ""
     start: int = 1
 
-    def process(self, tokens: list[int], i: int):
+    def process(self: Any, tokens: list[Any], i: int) -> Any:
         fun_name_li: list = get_fun_id(self)
-        resulta: list[int] = []
+        resulta: list[Any] = []
         if self.start:
             resulta = get_brakcets(self, "start", resulta)
             tokens = get_brakcets(self, "start", tokens)
@@ -240,7 +263,7 @@ class Model(BaseModel):
         get_name_and_type(self, resulta, tokens, num_para, para, i)
         return tokens, resulta
 
-    def main(self):
+    def main(self: Any) -> Any:
         result: list[int] = []
         r_final: list[int] = []
         for prompt in self.li_prompts:

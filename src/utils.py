@@ -1,8 +1,9 @@
 import json
 from .load_fun import functions
+from typing import Any
 
 
-def get_fun(self):
+def get_fun(self: Any) -> tuple[list[Any], str]:
     fn = functions()
     add = ""
     fun_name = []
@@ -13,6 +14,8 @@ def get_fun(self):
                     f"{k}: "
                     f"{'float' if v['type'] == 'number' else v['type'][:3]}"
                 )
+        if i.name[0].isdigit():
+            raise ValueError("function must not start with number")
         fct = f"{i.name}({', '.join(p)}): {i.description}"
         add += fct + "\n"
         fun_name.append(i.name)
@@ -20,20 +23,20 @@ def get_fun(self):
     return fun_name_id, add
 
 
-def get_fun_id(self) -> list[int]:
+def get_fun_id(self: Any) -> list[int]:
     ids, i = get_fun(self)
     i = i
     return ids
 
 
-def encode_fun(self):
+def encode_fun(self: Any) -> Any:
     id, fun = get_fun(self)
     id = id
     ids = self.model.encode(fun).tolist()[0]
     return ids
 
 
-def get_my_prompt(self, prompt):
+def get_my_prompt(self: Any, prompt: str) -> Any:
     prompt1 = f"""
     you are a function calling system.
     you will given a user prompt and convert it to a function calling format.

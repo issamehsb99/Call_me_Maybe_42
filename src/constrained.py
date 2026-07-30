@@ -1,7 +1,8 @@
 import numpy as np
+from typing import Any
 
 
-def extract_token_n(ids, n):
+def extract_token_n(ids: list[list[int]], n: int) -> set:
     """that function extract token n from ids """
     chose = set()
     for i in ids:
@@ -10,7 +11,11 @@ def extract_token_n(ids, n):
     return (chose)
 
 
-def constrained_function_name(self, fun_name_li: list[list[int]], in_id: list[int]):
+def constrained_function_name(
+        self: Any,
+        fun_name_li: list[Any],
+        in_id: list[Any]
+) -> list[Any]:
     just_copy = fun_name_li.copy()
     n = 0
     output = []
@@ -38,7 +43,7 @@ def constrained_function_name(self, fun_name_li: list[list[int]], in_id: list[in
     return output
 
 
-def get_brakcets(self, state: str, tokens: list[int]):
+def get_brakcets(self: Any, state: str, tokens: list[int]) -> list[Any]:
     tokens_cpy = tokens.copy()
     if state == "start":
         tokens_cpy += self.model.encode("[{").tolist()[0]
@@ -49,7 +54,7 @@ def get_brakcets(self, state: str, tokens: list[int]):
     return tokens_cpy
 
 
-def get_word(self, word: str, tokens):
+def get_word(self: Any, word: str, tokens: list[list[int]]) -> list[list[int]]:
     tokens_cpy = tokens.copy()
     ids = self.model.encode(word).tolist()[0]
 

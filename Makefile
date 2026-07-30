@@ -11,10 +11,11 @@ export TRANSFORMERS_CACHE := /goinfre/ihasbi/.cache/huggingface
 export HF_HUB_DOWNLOAD_TIMEOUT := 600
 export HF_HUB_ETAG_TIMEOUT := 60
 
+.PHONY: setup install run debug clean lint lint-strict check cache-info
+
 setup:
 	mkdir -p $(UV_CACHE_DIR)
 	mkdir -p $(HF_HOME)
-	uv add pydantic numpy
 	uv sync
 
 install:
@@ -30,9 +31,10 @@ check:
 	uv run --no-active $(PYTHON) -c "import pydantic, numpy; print('Dependencies OK')"
 
 clean:
-	rm -rf __pycache__
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 
 cache-info:
 	@echo "UV cache: $(UV_CACHE_DIR)"
@@ -40,4 +42,15 @@ cache-info:
 	@echo "Hugging Face cache: $(HF_HOME)"
 	@du -sh $(HF_HOME) 2>/dev/null || true
 
-.PHONY: setup install run debug check clean cache-info
+lint:
+	uv run --no-active flake8 src
+	uv run --no-active mypy src \
+		--warn-return-any \
+		--warn-unused-ignores \
+		--ignore-missing-imports \
+		--disallow-untyped-defs \
+		--check-untyped-defs
+
+lint-strict:
+	uv run --no-active flake8 src
+	uv run --no-active mypy src --strict
