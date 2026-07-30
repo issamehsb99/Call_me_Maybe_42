@@ -43,14 +43,10 @@ cache-info:
 	@du -sh $(HF_HOME) 2>/dev/null || true
 
 lint:
-	uv run --no-active flake8 src
-	uv run --no-active mypy src \
+	uv run --no-active flake8 .
+	uv run --no-active mypy . \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs
-
-lint-strict:
-	uv run --no-active flake8 src
-	uv run --no-active mypy src --strict

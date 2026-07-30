@@ -1,4 +1,4 @@
-from llm_sdk.llm_sdk import Small_LLM_Model
+from llm_sdk import Small_LLM_Model  # type: ignore
 import numpy as np
 from .constrained import constrained_function_name, get_brakcets, get_word
 from .utils import get_user_prompt, get_my_prompt, get_fun_id

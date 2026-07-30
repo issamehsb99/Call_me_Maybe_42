@@ -1,0 +1,5 @@
+[flake8]
+extend-exclude = 
+    .venv,
+    */.venv,
+    llm_sdk
