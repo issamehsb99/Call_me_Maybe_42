@@ -1,5 +1,5 @@
 PYTHON := python3
-MAIN := src.model
+MAIN := src
 
 export UV_CACHE_DIR := /goinfre/ihasbi/.cache/uv
 export UV_PROJECT_ENVIRONMENT := /goinfre/ihasbi/call_me_maybe/.venv

@@ -8,16 +8,18 @@ class FunctionCalling(BaseModel):
     parameters: dict[str, dict[str, str]]
     returns: dict[str, str]
 
-def functions() -> list:
-    path = "data/input/functions_definition.json"
 
-    with open(path, "r") as f:
-        data = json.load(f)
-   
+def functions() -> list:
+    from .model import parse_args
+    arg = parse_args()
+    path = arg.functions_definition
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+    except IOError as e:
+        print("error : ", e)
     funcs = []
-    fun_par={}
-    for dt in data: 
-        
+    for dt in data:
         try:
             fn = FunctionCalling.model_validate(dt)
             funcs.append(fn)
@@ -25,5 +27,3 @@ def functions() -> list:
             print("Validation error:")
             print(e)
     return funcs
-
-

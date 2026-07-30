@@ -1,31 +1,27 @@
-# from .llm_sdk import Small_LLM_Model
 import json
-# model = Small_LLM_Model()
 from .load_fun import functions
 
 
 def get_fun(self):
     fn = functions()
     add = ""
-    
-    l = 0
     fun_name = []
-    dic = {}
-     
     for i in fn:
-        params = []
+        p = []
         for k, v in i.parameters.items():
-            params.append(f"{k}: {'float' if v['type'] == 'number' else v['type'][:3] }")
-        fct =f"{i.name}({', '.join(params)}): {i.description}"
+            p.append(
+                    f"{k}: "
+                    f"{'float' if v['type'] == 'number' else v['type'][:3]}"
+                )
+        fct = f"{i.name}({', '.join(p)}): {i.description}"
         add += fct + "\n"
-        l +=1
         fun_name.append(i.name)
     fun_name_id = [self.model.encode(f).tolist()[0] for f in fun_name]
-    return  fun_name_id , add
+    return fun_name_id, add
 
 
-def get_fun_id(self) ->list[int]:
-    ids , i  = get_fun(self)
+def get_fun_id(self) -> list[int]:
+    ids, i = get_fun(self)
     i = i
     return ids
 
@@ -37,30 +33,45 @@ def encode_fun(self):
     return ids
 
 
-def get_my_prompt(self):
-    prompt2 = """
-    find the function that maches the request 
-    Rules:
-        -Respect float type oblige .
-    Available functions:\n"""
-    prompt1 = (
-        "use brain"
-        'Answer Example: {"prompt":"change "MESSI" tolower case","name":"fn_to_lower","parameters":{"name":"MESSI"}}\n'
-        'Function Data: '
-    )
+def get_my_prompt(self, prompt):
+    prompt1 = f"""
+    you are a function calling system.
+    you will given a user prompt and convert it to a function calling format.
+
+
+    FUNCTIONS:
+    {get_fun(self)[1]}
+
+    TASK:
+    user_prompt: {prompt}
+
+    OUTPUT:
+    """
     ids = self.model.encode(prompt1).tolist()[0]
     ids += encode_fun(self)
     return ids
 
-def get_user_prompt() ->list[str]:
-    with open("data/input/function_calling_tests.json", 'r') as f:
-        data = json.load(f)
+
+def get_user_prompt() -> list[str]:
+    from .model import parse_args
+    arg = parse_args()
+    try:
+        with open(arg.input, 'r') as f:
+            data = json.load(f)
+    except IOError as e:
+        print(e)
     li_prompt = []
     li_final = []
     for i in data:
         li_prompt.append(i.get("prompt"))
     for pr in li_prompt:
+        if not pr:
+            continue
+        pr = pr.replace("\t", " ")
+        pr = pr.replace("\n", " ")
+        if "\\" in pr:
+            pr = pr.replace("\\", "\\\\")
         if "\"" in pr:
-            pr = pr.replace("\"", "\'")
+            pr = pr.replace('\"', '\\"')
         li_final.append(pr)
     return li_final
