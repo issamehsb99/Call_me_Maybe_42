@@ -9,7 +9,7 @@ def main() -> None:
     mod = Model()
     begin_time = time.perf_counter()
     resulta = mod.main()
-    print("===", resulta, "end")
+    print(resulta)
     arg = parse_args()
     path = arg.output
     os.makedirs("data/output", exist_ok=True)

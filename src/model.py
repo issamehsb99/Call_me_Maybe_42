@@ -178,16 +178,19 @@ def get_full_str(
 
 def get_bool(self: Any, tokens: list[Any], resulta: list[Any]) -> None:
     allowed = ["true", "false"]
-    id_al = [self.model.encode(i) for i in allowed]
+
+    ids = [self.model.encode(x).tolist()[0] for x in allowed]
+
     logits = self.model.get_logits_from_input_ids(tokens)
     filtered = np.full_like(logits, -np.inf)
-    for i in id_al:
-        filtered[i] = logits[i]
-    nex = np.argmax(filtered)
-    for p in id_al:
-        if nex in p:
-            tokens.extend(p)
-            resulta.extend(p)
+    for seq in ids:
+        filtered[seq[0]] = logits[seq[0]]
+    next_token = np.argmax(filtered)
+    for seq in ids:
+        if seq[0] == next_token:
+            tokens.extend(seq)
+            resulta.extend(seq)
+            return
 
 
 def get_name_and_type(
@@ -206,9 +209,6 @@ def get_name_and_type(
         for tkn in get_name_pa(self, para)[i]:
             tokens.append(tkn)
             resulta.append(tkn)
-        # tokens.extend(get_name_pa(self, para)[i])
-        # print(get_name_pa(self, para)[i])
-        # resulta += get_name_pa(self, para)[i]
         if v["type"] == "number" or v["type"] == "float":
             get_full_number(self, tokens, resulta, ma)
         if v["type"] == "string":
@@ -221,6 +221,7 @@ def get_name_and_type(
         if v["type"] == "int" or v["type"] == "integer":
             get_full_int(self, tokens, resulta, ma)
         if v["type"] == "bool" or v["type"] == "boolean":
+            id = self.model.encode('"').tolist()[0][0]
             tokens.append(id)
             resulta.append(id)
             get_bool(self, tokens, resulta)
