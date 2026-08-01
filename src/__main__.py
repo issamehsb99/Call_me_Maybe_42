@@ -29,3 +29,5 @@ if __name__ == "__main__":
         print("error")
     except Exception as e:
         print(e)
+    except KeyboardInterrupt as e:
+        print(e)

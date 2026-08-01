@@ -39,7 +39,7 @@
     }
   },
   {
-    "name": "3fn_get_square_root",
+    "name": "fn_get_square_root",
     "description": "Calculate the square root of a number.",
     "parameters": {
       "a": {
